@@ -16,8 +16,6 @@ void page_version()
 
 void main(string[] args)
 {
-    string oformat = "YYYY-MM";
-    string odestination = "stats";
     bool ovrc;
     bool ovrcx;
     bool otrace;
@@ -31,6 +29,12 @@ void main(string[] args)
     {
         stderr.writeln("error: ", ex);
         exit(1);
+    }
+    
+    if (res.helpWanted)
+    {
+        defaultGetoptPrinter("VRC image util", res.options);
+        exit(0);
     }
     
     if (args.length <= 1)
