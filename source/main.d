@@ -49,8 +49,8 @@ void main(string[] args)
     
     PNGMetadata meta = getPNGmetadata(path, ovrc, ovrcx, otrace);
     
-    if (ovrc)
+    if (ovrc && meta.vrc)
         writeln(meta.vrc);
-    if (ovrcx)
+    if (ovrcx && meta.vrcx)
         writeln(meta.vrcx);
 }
