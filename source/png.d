@@ -18,6 +18,14 @@ PNGMetadata getPNGmetadata(string path, bool vrc, bool vrcx, bool trace)
 {
     File file = File(path, "rb");
     
+    // structure:
+    // - magic (c[8])
+    // - chunks...
+    //   - length (u32)
+    //   - type (char[4])
+    //   - data...
+    //   - crc (u32)
+    
     ubyte[8] sigbuf;
     ubyte[] sig = file.rawRead(sigbuf);
     if (sig.length < magic.length)
@@ -74,6 +82,8 @@ PNGMetadata getPNGmetadata(string path, bool vrc, bool vrcx, bool trace)
             {
                 meta.vrc = cast(string)datbuf[vrcmagic.length..$].idup;
                 gotvrc = true;
+                if (vrcx == false) // no VRCX and got VRC, get out
+                    break L;
                 continue;
             }
             
@@ -85,6 +95,8 @@ PNGMetadata getPNGmetadata(string path, bool vrc, bool vrcx, bool trace)
             {
                 meta.vrcx = cast(string)datbuf[vrcxmagic.length..$].idup;
                 gotvrcx = true;
+                if (vrc == false) // no VRC and got VRCX, get out
+                    break L;
                 continue;
             }
             break;
@@ -126,11 +138,3 @@ struct PNGChunkHeader
     // data ...
     // uint crc
 }
-
-// structure:
-// - magic (c[8])
-// - number of chunks (u32)
-// - chunk header
-//   - length (u32)
-//   - data...
-//   - crc (u32)
