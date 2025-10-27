@@ -1,0 +1,16 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/vrcdd
+vrcdd-test-*
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.exe
+*.pdb
+*.o
+*.obj
+*.lst
