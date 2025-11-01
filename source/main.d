@@ -7,7 +7,7 @@ import std.json;
 import std.path : baseName;
 import png;
 
-enum APP_VERSION = "0.1.0";
+enum APP_VERSION = "0.2.0";
 
 void page_version()
 {
