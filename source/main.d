@@ -109,7 +109,7 @@ int main(string[] args)
                 if (ostats_file)
                     writeln;
             }
-            if (ostats_dir)
+            if (ostats_dir && displayNamesDir.length > 0)
             {
                 write(baseName(entry_dir.name));
                 foreach (key, value; displayNamesDir)
