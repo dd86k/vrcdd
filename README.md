@@ -46,7 +46,7 @@ $ vrcdd --vrc 2025-10/VRChat_2025-10-05_00-16-24.415_1920x1080.png
 ## VRCX example
 
 ```
-$ vrcdd --vrx 2024-07/VRChat_2024-07-25_18-04-06.921_1920x1080.png
+$ vrcdd --vrcx 2024-07/VRChat_2024-07-25_18-04-06.921_1920x1080.png
 {"application":"VRCX","version":1,"author":{"id":"usr_34f3d933-b091-4163-9565-59cb819aca45","displayName":"dd86k"},"world":{"name":"VRChat Home","id":"wrld_4432ea9b-729c-46e3-8eaf-846aa0a37fdd","instanceId":"wrld_4432ea9b-729c-46e3-8eaf-846aa0a37fdd:64104~private(usr_34f3d933-b091-4163-9565-59cb819aca45)~region(use)"},"players":[{"id":"usr_34f3d933-b091-4163-9565-59cb819aca45","displayName":"dd86k"}]}
 ```
 
@@ -73,7 +73,7 @@ Separators:
 
 To use stats mode, point the tool to your root VRChat photo directory:
 
-`vrcdd --stats C:\Users\%USERNAME%\Images\VRChat`
+`vrcdd --stats C:\Users\%USERNAME%\Pictures\VRChat`
 
 `--stats` will perform a global count of all users by display name, unsorted (sort it yourself).
 
