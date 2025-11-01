@@ -77,6 +77,7 @@ int main(string[] args)
             if (otrace)
                 stderr.writeln("folder: ", entry_dir.name);
             
+            int[string] displayNamesDir; /// dir stats
             foreach (entry_file; dirEntries(entry_dir.name, SpanMode.shallow))
             {
                 
@@ -87,7 +88,6 @@ int main(string[] args)
                     stderr.writeln("file+vrcx: ", entry_file.name);
                 JSONValue json = parseJSON(meta.vrcx);
                 
-                int[string] displayNamesDir; /// dir stats
                 if (ostats_file)
                     write(baseName(entry_file.name), osep);
                 foreach (i, user; json["players"].array())
@@ -108,15 +108,15 @@ int main(string[] args)
                 }
                 if (ostats_file)
                     writeln;
-                if (ostats_dir)
+            }
+            if (ostats_dir)
+            {
+                write(baseName(entry_dir.name));
+                foreach (key, value; displayNamesDir)
                 {
-                    write(baseName(entry_dir.name));
-                    foreach (key, value; displayNamesDir)
-                    {
-                        write(osep, value, osep, key);
-                    }
-                    writeln();
+                    write(osep, value, osep, key);
                 }
+                writeln();
             }
         }
         if (ostats)
