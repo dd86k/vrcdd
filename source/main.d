@@ -78,8 +78,10 @@ int main(string[] args)
                 stderr.writeln("folder: ", entry_dir.name);
             
             int[string] displayNamesDir; /// dir stats
-            foreach (entry_file; dirEntries(entry_dir.name, SpanMode.shallow))
+            foreach (entry_file; dirEntries(entry_dir.name, SpanMode.depth))
             {
+                if (entry_file.isDir()) // can't stat dir
+                    continue;
                 
                 PNGMetadata meta = getPNGmetadata(entry_file.name, false, true, otrace);
                 if (meta.vrcx is null)
