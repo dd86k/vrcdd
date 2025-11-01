@@ -4,10 +4,10 @@ Usage: invoke with `--vrc` and/or `--vrcx` to get respective data out of a file.
 
 Data formats:
 - VRC
-  - Data appeared around early 2025-08.
+  - Data appeared around early 2025-08 (Added in [VRChat 2025.3.2](https://docs.vrchat.com/docs/vrchat-202532)).
   - XML, Adobe format.
 - VRCX
-  - Data appeared 2023-08-01.
+  - Added in [VRCX 2023.02.18](https://github.com/vrcx-team/VRCX/releases/tag/v2023.02.18).
   - JSON.
 
 The `--stats`, `--stats-dir`, and `--stats-file` invokes a statistics mode.
