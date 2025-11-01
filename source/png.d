@@ -57,7 +57,7 @@ PNGMetadata getPNGmetadata(string path, bool vrc, bool vrcx, bool trace)
         uint chksize = bswap(dumb.hdr.Length);
         
         if (trace)
-            writeln("chksize=", chksize);
+            stderr.writeln("chksize=", chksize, " chk=", dumb.hdr.ChunkType);
         
         switch (dumb.hdr.ChunkType) {
         case "iTXt":
@@ -119,7 +119,7 @@ PNGMetadata getPNGmetadata(string path, bool vrc, bool vrcx, bool trace)
         case "tIME":
             break;*/
         default:
-            file.seek(chksize + 4, SEEK_CUR);
+            file.seek(chksize + 4, SEEK_CUR); // +checksum
         }
     }
     

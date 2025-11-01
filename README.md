@@ -1,6 +1,6 @@
 Quick tool to extract metadata from VRChat PNG images.
 
-Usage: invoke with `--vrc` and/or `--vrcx` to get respective data.
+Usage: invoke with `--vrc` and/or `--vrcx` to get respective data out of a file.
 
 Data formats:
 - VRC
@@ -10,7 +10,9 @@ Data formats:
   - Data appeared 2023-08-01.
   - JSON.
 
-Example:
+The `--stats`, `--stats-dir`, and `--stats-file` invokes a statistics mode.
+
+## VRC example
 
 ```
 $ vrcdd --vrc 2025-10/VRChat_2025-10-05_00-16-24.415_1920x1080.png
@@ -41,4 +43,50 @@ $ vrcdd --vrc 2025-10/VRChat_2025-10-05_00-16-24.415_1920x1080.png
 </x:xmpmeta>
 ```
 
-License: CC0-1.0
+## VRCX example
+
+```
+$ vrcdd --vrx 2024-07/VRChat_2024-07-25_18-04-06.921_1920x1080.png
+{"application":"VRCX","version":1,"author":{"id":"usr_34f3d933-b091-4163-9565-59cb819aca45","displayName":"dd86k"},"world":{"name":"VRChat Home","id":"wrld_4432ea9b-729c-46e3-8eaf-846aa0a37fdd","instanceId":"wrld_4432ea9b-729c-46e3-8eaf-846aa0a37fdd:64104~private(usr_34f3d933-b091-4163-9565-59cb819aca45)~region(use)"},"players":[{"id":"usr_34f3d933-b091-4163-9565-59cb819aca45","displayName":"dd86k"}]}
+```
+
+NOTE: You can use [jq](https://github.com/jqlang/jq) or similar tools for further processing.
+
+## Statistics
+
+Invoking `--stats`, `--stats-dir`, or `--stats-file` will enable statistic mode.
+
+Stats mode enables VRCX by default (since VRC metadata is useless and does not
+include instance players) and assumes the folder structure contains VRChat photos
+per-month to match with the globbing of `????-??` (YYYY-MM, so year and month).
+
+Its output uses hardware tabs for easier usage with spreadsheet programs (ie, LO Calc).
+
+You can specify separator by name: `--separator=tab` will output `'\t'` (default)
+
+Separators:
+- `tab`: `\t` (default)
+- `column`: `:`
+- `semi`: `;` (for Excel)
+- `comma`: `,` (for CSV)
+- other: Use as-is, so `-Sstupid` will use `"stupid"` as... a separator.
+
+To use stats mode, point the tool to your root VRChat photo directory:
+
+`vrcdd --stats C:\Users\%USERNAME%\Images\VRChat`
+
+`--stats` will perform a global count of all users by display name, unsorted (sort it yourself).
+
+Format: count separator displayName
+
+`--stats-dir` will perform a count per folder, unsorted (sort it yourself).
+
+Format: directory [separator count separator displayName]...
+
+`--stats-file` will simply list players per file.
+
+Format: file [separator displayName]...
+
+## License
+
+CC0-1.0
