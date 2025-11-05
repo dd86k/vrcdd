@@ -78,17 +78,26 @@ Separators:
 Results for each modes are printed on screen. Most important to pipe it into
 a file or into the clipboard (Win32: `... | clip`, Xorg: `... | xclip -sel clip`).
 
-To use stats mode, point the tool to your root VRChat photo directory:
+Both global and directory stats are sorted descending.
 
-`vrcdd --stats C:\Users\%USERNAME%\Pictures\VRChat`
+To use stats mode, point the tool to your root VRChat photo directory:
+```
+vrcdd --stats C:\Users\%USERNAME%\Pictures\VRChat
+```
+
+### Global stats
 
 `--stats` will perform a global count of all users by display name, unsorted (sort it yourself).
 
 Format: count separator displayName
 
+### Per-Directory stats
+
 `--stats-dir` will perform a count per folder, unsorted (sort it yourself).
 
 Format: directory [separator count separator displayName]...
+
+### Per-Photo stats
 
 `--stats-file` will simply list players per file.
 
