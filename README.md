@@ -1,6 +1,12 @@
 Quick tool to extract metadata from VRChat PNG images.
 
-Usage: invoke with `--vrc` and/or `--vrcx` to get respective data out of a file.
+Usage:
+- `--vrc FILE`: extract VRC metadata
+- `--vrcx FILE`: extract VRCX metadata
+- `--stats DIR`: perform global statistics on VRChat pictures folder
+- `--stats-dir DIR`: perform statistics per-directory on VRChat pictures folder
+- `--stats-file DIR`: show who was present in each photo
+- `--strip OLD NEW`: write NEW file without metadata from OLD picture
 
 Data formats:
 - VRC
@@ -9,8 +15,6 @@ Data formats:
 - VRCX
   - Added in [VRCX 2023.02.18](https://github.com/vrcx-team/VRCX/releases/tag/v2023.02.18).
   - JSON.
-
-The `--stats`, `--stats-dir`, and `--stats-file` invokes a statistics mode.
 
 ## VRC example
 
@@ -102,6 +106,19 @@ Format: directory [separator count separator displayName]...
 `--stats-file` will simply list players per file.
 
 Format: file [separator displayName]...
+
+## Stripping metadata
+
+The `--strip` option write a new file without metadata.
+
+For example:
+```
+vrcdd --strip YES.png NO.png
+```
+
+Reads `YES.png` and writes `NO.png` without the metadata.
+
+Technical: This rewrites all but `iTXt` PNG chunks, so it will also work for any other PNGs.
 
 ## License
 

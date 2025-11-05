@@ -27,6 +27,7 @@ int main(string[] args)
     bool ostats;
     bool ostats_dir;
     bool ostats_file;
+    bool ostrip;
     string osep = "\t"; /// Separator
     string oglob = "????-??";
     GetoptResult res;
@@ -40,12 +41,13 @@ int main(string[] args)
             case "comma":   osep = ","; return;
             case "semi":    osep = ";"; return;
             case "column":  osep = ":"; return;
-            default: osep = val;
+            default:        osep = val;
             }
         },
         "stats",        "Compile statistics from folder globally (count)", &ostats,
         "stats-dir",    "Compile statistics from folder per directory (count)", &ostats_dir,
         "stats-file",   "Compile statistics from folder per file (list)", &ostats_file,
+        "strip",        "Strip metadata from file", &ostrip,
         "vrc",          "Get VRC (XML) metadata", &ovrc,
         "vrcx",         "Get VRCX (JSON) metadata", &ovrcx,
         "trace",        "Print trace on stderr", &otrace,
@@ -133,14 +135,27 @@ int main(string[] args)
         return 0;
     }
     
+    PNG png = PNG(path);
+    
+    // strip metadata
+    if (ostrip)
+    {
+        if (args.length < 2)
+            throw new Exception("Need output path... NOW");
+        png.strip(args[2]);
+        // (a) output path: to path
+        // (b) no output path but -y: in place
+        return 0;
+    }
+    
     if (ovrc == false && ovrcx == false)
     {
         stderr.writeln("error: Need --vrc and/or --vrcx");
         return 2;
     }
     
-    PNGMetadata meta = PNG(path).metadata(ovrc, ovrcx);
-    
+    // Print metadata (default)
+    PNGMetadata meta = png.metadata(ovrc, ovrcx);
     if (ovrc && meta.vrc)
         writeln(meta.vrc);
     if (ovrcx && meta.vrcx)

@@ -1,3 +1,4 @@
+/// https://www.w3.org/TR/png-3/
 module png;
 
 import std.stdio;
@@ -7,13 +8,6 @@ struct PNGMetadata
 {
     string vrc;
     string vrcx;
-}
-
-private
-union ChunkBuffer
-{
-    PNGChunkHeader chunk;
-    ubyte[PNGChunkHeader.sizeof] raw;
 }
 
 /*
@@ -36,11 +30,11 @@ struct PNG
         file = File(path, "rb");
     
         // Reading magic for validation makes sense when opening
-        ubyte[8] sigbuf;
+        ubyte[pngmagic.length] sigbuf;
         ubyte[] sig = file.rawRead(sigbuf);
-        if (sig.length < magic.length)
+        if (sig.length < pngmagic.length)
             throw new Exception("magic length");
-        if (sig != magic)
+        if (sig != pngmagic)
             throw new Exception("invalid magic");
     }
     
@@ -115,38 +109,86 @@ struct PNG
         return meta;
     }
     
-    /* TODO: void stripmeta()
+    // strip iTXt chunks to new file
+    void strip(string output)
     {
-        // 1. random new filename
-        // 2. open temp file in same dir
-        // 3. write data, skip unwanted chunks (blacklist)
-        // 4. close both handles
-        // 5. replace target file
-    }*/
+        // Open file and write magic, very simple, love PNG
+        File outfile = File(output, "wb");
+        outfile.rawWrite(pngmagic);
+        
+        import std.algorithm : min;
+        enum BUFFERSIZE = 64 * 1024;
+        ubyte[] buffer; buffer.length = BUFFERSIZE;
+        while (file.eof == false)
+        {
+            PNGChunkHeader chunk = readchunk();
+            
+            // by chunk type...
+            switch (chunk.ChunkType) {
+            case "iTXt": // Skip
+                // Jump chunk + checksum
+                file.seek(chunk.Length + 4, SEEK_CUR);
+                break;
+            case "IEND": // Length=0,"IEND",CRC and exit to avoid exception
+                // Write chunk header
+                outfile.rawWrite((cast(ubyte*)&chunk)[0..PNGChunkHeader.sizeof]);
+                // Write checksum
+                ubyte[4] crc = void;
+                file.rawRead(crc);
+                outfile.rawWrite(crc);
+                return;
+            default:
+                uint chksize = chunk.Length; // cheap hack, sorry
+                
+                // Write chunk header
+                chunk.Length = bswap(chunk.Length);
+                outfile.rawWrite((cast(ubyte*)&chunk)[0..PNGChunkHeader.sizeof]);
+                
+                // Write chunk data
+                if (chunk.Length)
+                {
+                    uint read;
+                    while (true)
+                    {
+                        uint amount = min(BUFFERSIZE, chksize - read);
+                        file.rawRead(buffer[0..amount]);
+                        outfile.rawWrite(buffer[0..amount]);
+                        if (amount < BUFFERSIZE)
+                            break;
+                    }
+                }
+                
+                // Write checksum
+                ubyte[4] crc = void;
+                file.rawRead(crc);
+                outfile.rawWrite(crc);
+            }
+        }
+    }
     
 private
     File file;
     
     PNGChunkHeader readchunk()
     {
-        ChunkBuffer buffer = void;
+        PNGChunkHeader chunk = void;
         
-        size_t len = file.rawRead(buffer.raw).length;
+        size_t len = file.rawRead((cast(ubyte*)&chunk)[0..PNGChunkHeader.sizeof]).length;
         if (len < PNGChunkHeader.sizeof)
             throw new Exception("Unexpected EOF");
         
-        buffer.chunk.Length = bswap(buffer.chunk.Length);
+        chunk.Length = bswap(chunk.Length);
         
         /*if (trace)
             stderr.writeln("chksize=", chksize, " chk=", dumb.hdr.ChunkType);*/
         
-        return buffer.chunk;
+        return chunk;
     }
 }
 
 private:
 
-immutable ubyte[] magic = [ 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A ];
+immutable ubyte[] pngmagic = [ 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A ];
 
 struct PNGChunkHeader
 {
