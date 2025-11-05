@@ -9,121 +9,139 @@ struct PNGMetadata
     string vrcx;
 }
 
+private
+union ChunkBuffer
+{
+    PNGChunkHeader chunk;
+    ubyte[PNGChunkHeader.sizeof] raw;
+}
+
 /*
 Textual information: iTXt, tEXt, zTXt (see 11.3.3 Textual information).
 Miscellaneous information: bKGD, hIST, pHYs, sPLT, eXIf (see 11.3.4 Miscellaneous information). 
 */
-
-PNGMetadata getPNGmetadata(string path, bool vrc, bool vrcx, bool trace)
+struct PNG
 {
-    File file = File(path, "rb");
-    
-    // structure:
-    // - magic (c[8])
-    // - chunks...
-    //   - length (u32)
-    //   - type (char[4])
-    //   - data...
-    //   - crc (u32)
-    
-    ubyte[8] sigbuf;
-    ubyte[] sig = file.rawRead(sigbuf);
-    if (sig.length < magic.length)
-        throw new Exception("magic length");
-    if (sig != magic)
-        throw new Exception("invalid magic");
-    
-    PNGMetadata meta;
-    
-    // Loop chunks until we find good shit
-    union DUMB
+    this(string path)
     {
-        PNGChunkHeader hdr;
-        ubyte[PNGChunkHeader.sizeof] raw;
+        open(path);
     }
-    DUMB dumb;
-    ubyte[] datbuf;
-    bool gotvrc;
-    bool gotvrcx;
-    L: while (true)
+    ~this()
     {
-        if (gotvrc && gotvrcx)
-            break;
+        close();
+    }
+    
+    void open(string path)
+    {
+        file = File(path, "rb");
+    
+        // Reading magic for validation makes sense when opening
+        ubyte[8] sigbuf;
+        ubyte[] sig = file.rawRead(sigbuf);
+        if (sig.length < magic.length)
+            throw new Exception("magic length");
+        if (sig != magic)
+            throw new Exception("invalid magic");
+    }
+    
+    void close()
+    {
+        if (file.isOpen()) // just in case if close() & ~this()
+            file.close();
+    }
+    
+    PNGMetadata metadata(bool vrc, bool vrcx)
+    {
+        PNGMetadata meta;
+        bool gotvrc, gotvrcx;
         
-        size_t len = file.rawRead(dumb.raw).length;
-        if (len < PNGChunkHeader.sizeof)
-            return meta;
-        
-        uint chksize = bswap(dumb.hdr.Length);
-        
-        if (trace)
-            stderr.writeln("chksize=", chksize, " chk=", dumb.hdr.ChunkType);
-        
-        switch (dumb.hdr.ChunkType) {
-        case "iTXt":
-            datbuf.length = chksize;
+        L: while (true)
+        {
+            PNGChunkHeader chunk = readchunk();
             
-            // Read data
-            size_t chklen = file.rawRead(datbuf).length;
-            if (chklen < datbuf.length)
-                throw new Exception("GRRRR missing chunk data");
-            
-            // Read CRC
-            ubyte[4] crc32;
-            size_t crclen = file.rawRead(crc32).length;
-            if (crclen < crc32.length)
-                throw new Exception("GRRRR missing crc data");
-            
-            // "XML:com.adobe.xmp\0\0\0\0\0" (22)... VRC, XML
-            static immutable string vrcmagic = "XML:com.adobe.xmp\0\0\0\0\0";
-            if (vrc &&
-                chksize > vrcmagic.length &&
-                datbuf[0..vrcmagic.length] == vrcmagic)
-            {
-                meta.vrc = cast(string)datbuf[vrcmagic.length..$].idup;
-                gotvrc = true;
-                if (vrcx == false) // no VRCX and got VRC, get out
-                    break L;
-                continue;
+            ubyte[] chunkbuf;
+            switch (chunk.ChunkType) {
+            case "iTXt":
+                // Size buffer to chunk's... assuming it's okay haha
+                chunkbuf.length = chunk.Length;
+                
+                // Read data
+                size_t chklen = file.rawRead(chunkbuf).length;
+                if (chklen < chunkbuf.length)
+                    throw new Exception("GRRRR missing chunk data");
+                
+                // Read CRC (which we skip, assuming it's fine)
+                ubyte[4] crc32;
+                size_t crclen = file.rawRead(crc32).length;
+                if (crclen < crc32.length)
+                    throw new Exception("GRRRR missing crc data");
+                
+                // VRC (XML) format
+                // "XML:com.adobe.xmp\0\0\0\0\0" (22)
+                static immutable string vrcmagic = "XML:com.adobe.xmp\0\0\0\0\0";
+                if (vrc &&
+                    chunk.Length > vrcmagic.length &&
+                    chunkbuf[0..vrcmagic.length] == vrcmagic)
+                {
+                    meta.vrc = cast(string)chunkbuf[vrcmagic.length..$].idup;
+                    gotvrc = true;
+                    if (vrcx == false) // no VRCX and got VRC, get out
+                        break L;
+                    continue;
+                }
+                
+                // VRCX (JSON) format
+                // "Description\0\0\0\0\0" (16)
+                static immutable string vrcxmagic = "Description\0\0\0\0\0";
+                if (vrcx &&
+                    chunk.Length > vrcxmagic.length &&
+                    chunkbuf[0..vrcxmagic.length] == vrcxmagic)
+                {
+                    meta.vrcx = cast(string)chunkbuf[vrcxmagic.length..$].idup;
+                    gotvrcx = true;
+                    if (vrc == false) // no VRC and got VRCX, get out
+                        break L;
+                    continue;
+                }
+                break;
+            case "IEND":
+                break L;
+            default:
+                // Jump chunk + checksum
+                file.seek(chunk.Length + 4, SEEK_CUR);
             }
-            
-            // "Description\0\0\0\0\0" (16)... VRCX, JSON
-            static immutable string vrcxmagic = "Description\0\0\0\0\0";
-            if (vrcx &&
-                chksize > vrcxmagic.length &&
-                datbuf[0..vrcxmagic.length] == vrcxmagic)
-            {
-                meta.vrcx = cast(string)datbuf[vrcxmagic.length..$].idup;
-                gotvrcx = true;
-                if (vrc == false) // no VRC and got VRCX, get out
-                    break L;
-                continue;
-            }
-            break;
-        case "IEND":
-            break L;
-        /*case "tEXt":
-            break;
-        case "zTXt":
-            break;
-        case "bKGD":
-            break;
-        case "hIST":
-            break;
-        case "pHYs":
-            break;
-        case "sPLT":
-            break;
-        case "eXIf":
-            break;
-        case "tIME":
-            break;*/
-        default:
-            file.seek(chksize + 4, SEEK_CUR); // +checksum
         }
+        
+        return meta;
     }
     
-    return meta;
+    /* TODO: void stripmeta()
+    {
+        // 1. random new filename
+        // 2. open temp file in same dir
+        // 3. write data, skip unwanted chunks (blacklist)
+        // 4. close both handles
+        // 5. replace target file
+    }*/
+    
+private
+    File file;
+    
+    PNGChunkHeader readchunk()
+    {
+        ChunkBuffer buffer = void;
+        
+        size_t len = file.rawRead(buffer.raw).length;
+        if (len < PNGChunkHeader.sizeof)
+            throw new Exception("Unexpected EOF");
+        
+        buffer.chunk.Length = bswap(buffer.chunk.Length);
+        
+        /*if (trace)
+            stderr.writeln("chksize=", chksize, " chk=", dumb.hdr.ChunkType);*/
+        
+        return buffer.chunk;
+    }
 }
 
 private:

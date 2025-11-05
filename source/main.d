@@ -83,7 +83,7 @@ int main(string[] args)
                 if (entry_file.isDir()) // can't stat dir
                     continue;
                 
-                PNGMetadata meta = getPNGmetadata(entry_file.name, false, true, otrace);
+                PNGMetadata meta = PNG(entry_file.name).metadata(false, true);
                 if (meta.vrcx is null)
                     continue;
                 if (otrace)
@@ -133,7 +133,7 @@ int main(string[] args)
         return 2;
     }
     
-    PNGMetadata meta = getPNGmetadata(path, ovrc, ovrcx, otrace);
+    PNGMetadata meta = PNG(path).metadata(ovrc, ovrcx);
     
     if (ovrc && meta.vrc)
         writeln(meta.vrc);
