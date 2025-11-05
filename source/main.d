@@ -9,7 +9,7 @@ import std.path : baseName;
 import std.stdio;
 import png;
 
-enum APP_VERSION = "0.2.0";
+enum APP_VERSION = "0.3.0";
 
 void page_version()
 {
