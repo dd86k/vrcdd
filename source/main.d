@@ -1,10 +1,12 @@
 module main;
 
-import std.stdio;
-import std.getopt;
+import std.array : array;
+import std.algorithm.sorting : sort;
 import std.file : dirEntries, DirEntry, SpanMode;
+import std.getopt;
 import std.json;
 import std.path : baseName;
+import std.stdio;
 import png;
 
 enum APP_VERSION = "0.2.0";
@@ -102,6 +104,7 @@ int main(string[] args)
                     if (ostats_dir)
                         displayNamesDir.update(displayName, () => 1, (ref int v) { v++; });
                     
+                    // FILE STATS
                     if (ostats_file)
                     {
                         if (i) write(osep);
@@ -111,19 +114,22 @@ int main(string[] args)
                 if (ostats_file)
                     writeln;
             }
+            
+            // DIR STATS
             if (ostats_dir && displayNamesDir.length > 0)
             {
                 write(baseName(entry_dir.name));
-                foreach (key, value; displayNamesDir)
-                {
-                    write(osep, value, osep, key);
-                }
+                foreach (pair; displayNamesDir.byKeyValue.array.sort!((a, b) => a.value > b.value))
+                    write(osep, pair.value, osep, pair.key);
                 writeln();
             }
         }
+        
+        // GLOBAL STATS
         if (ostats)
-            foreach (key, value; displayNames)
-                writeln(value, osep, key);
+            foreach (pair; displayNames.byKeyValue.array.sort!((a, b) => a.value > b.value))
+                writeln(pair.value, osep, pair.key);
+        
         return 0;
     }
     
