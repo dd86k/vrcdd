@@ -96,7 +96,7 @@ int main(string[] args)
                 
                 if (ostats_file)
                 {
-                    write(baseName(entry_file.name), osep);
+                    write(baseName(entry_file.name));
                     foreach (u; json["players"]
                         .array()
                         .sort!((a, b) => a["displayName"].str < b["displayName"].str))
