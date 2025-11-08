@@ -95,26 +95,30 @@ int main(string[] args)
                 JSONValue json = parseJSON(meta.vrcx);
                 
                 if (ostats_file)
-                    write(baseName(entry_file.name), osep);
-                foreach (i, user; json["players"].array())
                 {
-                    string displayName = user["displayName"].str;
-                    
-                    if (ostats)
-                        displayNames.update(displayName, () => 1, (ref int v) { v++; });
-                    
-                    if (ostats_dir)
-                        displayNamesDir.update(displayName, () => 1, (ref int v) { v++; });
-                    
-                    // FILE STATS
-                    if (ostats_file)
+                    write(baseName(entry_file.name), osep);
+                    foreach (u; json["players"]
+                        .array()
+                        .sort!((a, b) => a["displayName"].str < b["displayName"].str))
                     {
-                        if (i) write(osep);
-                        write(displayName);
+                        write(osep, u["displayName"]);
+                    }
+                    writeln;
+                }
+                
+                if (ostats || ostats_dir)
+                {
+                    foreach (i, user; json["players"].array())
+                    {
+                        string displayName = user["displayName"].str;
+                        
+                        if (ostats)
+                            displayNames.update(displayName, () => 1, (ref int v) { v++; });
+                        
+                        if (ostats_dir)
+                            displayNamesDir.update(displayName, () => 1, (ref int v) { v++; });
                     }
                 }
-                if (ostats_file)
-                    writeln;
             }
             
             // DIR STATS
